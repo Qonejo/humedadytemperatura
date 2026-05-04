@@ -5,15 +5,21 @@
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
+#define HUMIDIFIER_PIN 19
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 Adafruit_AM2320 am2320 = Adafruit_AM2320();
+
+bool humidifierOn = false;
 
 void setup() {
   Serial.begin(115200);
   delay(2000);
 
   Wire.begin(21, 22);
+
+  pinMode(HUMIDIFIER_PIN, OUTPUT);
+  digitalWrite(HUMIDIFIER_PIN, LOW);
 
   // OLED
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
@@ -33,10 +39,20 @@ void loop() {
   float temp = am2320.readTemperature();
   float hum = am2320.readHumidity();
 
+  if (temp >= 28.0) {
+    humidifierOn = true;
+  } else if (temp <= 27.0) {
+    humidifierOn = false;
+  }
+
+  digitalWrite(HUMIDIFIER_PIN, humidifierOn ? HIGH : LOW);
+
   Serial.print("Temp: ");
   Serial.print(temp);
   Serial.print(" °C  Hum: ");
-  Serial.println(hum);
+  Serial.print(hum);
+  Serial.print("  Humidificador: ");
+  Serial.println(humidifierOn ? "ON" : "OFF");
 
   display.clearDisplay();
 
